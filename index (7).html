@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Fai un regalo a MrBigari</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root{
+  --sky:#5c94fc; --gold:#f8b800; --gold-d:#c87800; --gold-l:#ffd870;
+  --brick:#c84c0c; --used:#b05c1c; --used-d:#6c3408; --pipe:#00a800; --pipe-d:#005800;
+  --ink:#000; --px:'Press Start 2P',monospace; --txt:'VT323',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{image-rendering:pixelated}
+body{background:var(--sky);color:#fff;font-family:var(--txt);font-size:22px;line-height:1.15;min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden}
+button{font-family:inherit;color:inherit;cursor:pointer;border:0;background:none}
+:focus-visible{outline:4px solid #fff;outline-offset:2px}
+
+/* ---------- schermata iniziale ---------- */
+#boot{position:fixed;inset:0;z-index:50;background:var(--sky);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;text-align:center;padding:24px;cursor:pointer}
+#boot.off{display:none}
+#boot h1{font-family:var(--px);font-size:clamp(28px,8vw,56px);line-height:1.3;color:var(--gold);text-shadow:4px 4px 0 var(--brick),8px 8px 0 var(--ink)}
+#boot p{font-family:var(--px);font-size:11px;line-height:1.8}
+#boot .start{font-family:var(--px);font-size:14px;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* ---------- hud ---------- */
+.hud{display:flex;flex-wrap:wrap;gap:10px 28px;justify-content:space-between;padding:14px 18px;font-family:var(--px);font-size:10px;line-height:1.6;text-shadow:2px 2px 0 var(--ink)}
+.hud b{display:block;font-weight:400}
+.hud span{display:block;color:#fff}
+
+/* ---------- testata ---------- */
+header{position:relative;text-align:center;padding:12px 16px 20px}
+header h2{font-family:var(--px);font-size:clamp(16px,4.6vw,30px);line-height:1.5;color:var(--gold);text-shadow:3px 3px 0 var(--brick),6px 6px 0 var(--ink);position:relative;z-index:1}
+header p{margin-top:14px;font-size:24px;text-shadow:2px 2px 0 var(--ink);position:relative;z-index:1}
+.cloud{position:absolute;width:64px;height:24px;background:#fff;box-shadow:0 0 0 4px #fff;border-radius:2px;opacity:.95}
+.cloud::before{content:'';position:absolute;left:14px;top:-16px;width:32px;height:16px;background:#fff}
+.c1{left:6%;top:18px}.c2{right:8%;top:56px;transform:scale(.75)}
+
+/* ---------- controlli ---------- */
+.controls{padding:0 16px 8px;display:flex;flex-direction:column;gap:14px;max-width:1100px;width:100%;margin:0 auto}
+.pipes{display:flex;flex-wrap:wrap;gap:10px}
+.pipe{font-family:var(--px);font-size:9px;line-height:1.4;padding:10px 12px;background:var(--pipe);color:#fff;
+  box-shadow:inset -4px 0 0 var(--pipe-d),inset 4px 0 0 #58d858,0 0 0 4px var(--ink);text-shadow:2px 2px 0 var(--pipe-d)}
+.pipe[aria-pressed="true"]{background:var(--gold);color:var(--ink);text-shadow:none;box-shadow:inset -4px 0 0 var(--gold-d),inset 4px 0 0 var(--gold-l),0 0 0 4px var(--ink)}
+.row2{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:center}
+.row2 label{font-family:var(--px);font-size:9px;text-shadow:2px 2px 0 var(--ink);display:flex;align-items:center;gap:10px}
+select{font-family:var(--txt);font-size:22px;padding:4px 8px;background:#fff;color:var(--ink);border:4px solid var(--ink);border-radius:0}
+
+/* ---------- griglia di blocchi ---------- */
+main{flex:1;max-width:1100px;width:100%;margin:0 auto;padding:18px 16px 28px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:26px 20px;list-style:none}
+.item{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;text-align:center;position:relative}
+.blk{position:relative;width:100%;aspect-ratio:1;display:grid;place-items:center;font-family:var(--px);font-size:34px;color:#fff;text-shadow:3px 3px 0 var(--ink);
+  border:4px solid var(--ink);background:
+   radial-gradient(circle,var(--ink) 0 2px,transparent 2.5px) left 6px top 6px/8px 8px no-repeat,
+   radial-gradient(circle,var(--ink) 0 2px,transparent 2.5px) right 6px top 6px/8px 8px no-repeat,
+   radial-gradient(circle,var(--ink) 0 2px,transparent 2.5px) left 6px bottom 6px/8px 8px no-repeat,
+   radial-gradient(circle,var(--ink) 0 2px,transparent 2.5px) right 6px bottom 6px/8px 8px no-repeat,
+   var(--gold);
+  box-shadow:inset -6px -6px 0 var(--gold-d),inset 6px 6px 0 var(--gold-l);transition:transform .08s steps(2)}
+.item:hover .blk:not(.used){transform:translateY(-6px)}
+.blk.used{background-color:var(--used);box-shadow:inset -6px -6px 0 var(--used-d),inset 6px 6px 0 #d88c4c;font-size:0}
+.badge{position:absolute;right:-10px;top:-14px;font-size:22px;filter:drop-shadow(2px 2px 0 #000);font-family:initial}
+.used .badge{opacity:.45}
+.name{font-size:21px;text-shadow:2px 2px 0 var(--ink);overflow-wrap:anywhere}
+.price{font-family:var(--px);font-size:9px;text-shadow:2px 2px 0 var(--ink);display:flex;align-items:center;gap:6px}
+.coin{display:inline-block;width:12px;height:16px;border-radius:50%;background:var(--gold);border:2px solid var(--ink);box-shadow:inset -3px 0 0 var(--gold-d)}
+.item.taken .name,.item.taken .price{opacity:.6}
+.tag{font-family:var(--px);font-size:8px;color:var(--ink);background:#fff;padding:3px 5px;box-shadow:0 0 0 2px var(--ink)}
+.bump .blk{animation:bump .3s steps(4)}
+@keyframes bump{40%{transform:translateY(-18px)}}
+.pop{position:absolute;left:50%;top:0;font-size:28px;pointer-events:none;animation:pop .7s steps(8) forwards;font-family:initial}
+@keyframes pop{from{transform:translate(-50%,0);opacity:1}to{transform:translate(-50%,-70px);opacity:0}}
+
+.empty{font-family:var(--px);font-size:11px;line-height:1.8;text-align:center;padding:40px 10px;text-shadow:2px 2px 0 var(--ink)}
+.goal{display:flex;justify-content:center;align-items:flex-end;gap:14px;margin-top:44px;font-family:var(--px);font-size:9px;text-shadow:2px 2px 0 var(--ink)}
+.pole{width:8px;height:84px;background:#fff;border:2px solid var(--ink);position:relative}
+.pole::before{content:'';position:absolute;left:-8px;top:-14px;width:20px;height:14px;background:var(--pipe);border:2px solid var(--ink)}
+
+footer{position:relative;height:56px;background:
+  linear-gradient(0deg,var(--ink) 0 2px,transparent 2px) 0 0/100% 28px,
+  repeating-linear-gradient(90deg,var(--ink) 0 2px,var(--brick) 2px 32px);border-top:4px solid var(--ink)}
+
+/* ---------- finestra di dialogo ---------- */
+#modal,#admin{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:16px;overflow:auto}
+#modal.on,#admin.on{display:flex}
+#admin{z-index:45}
+.dlg{background:var(--ink);color:#fff;width:100%;max-width:440px;padding:18px;box-shadow:0 0 0 4px #fff,0 0 0 8px var(--ink);display:flex;flex-direction:column;gap:14px;max-height:100%;overflow:auto}
+.dlg h3{font-family:var(--px);font-size:13px;line-height:1.6;color:var(--gold)}
+.pic{position:relative;flex:none;width:100%;aspect-ratio:4/3;max-height:40vh;overflow:hidden;display:grid;place-items:center;font-size:72px;background:linear-gradient(#5c94fc,#a8c8ff);border:4px solid #fff;font-family:initial}
+.pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;image-rendering:auto}
+.meta{display:flex;flex-wrap:wrap;gap:8px 16px;font-family:var(--px);font-size:9px;line-height:1.6;align-items:center}
+.note{font-size:24px;line-height:1.2;border-left:4px solid var(--gold);padding-left:12px}
+.btns{display:flex;flex-wrap:wrap;gap:12px}
+.btn{font-family:var(--px);font-size:10px;line-height:1.5;padding:12px 14px;background:var(--gold);color:var(--ink);box-shadow:inset -4px -4px 0 var(--gold-d),inset 4px 4px 0 var(--gold-l),0 0 0 4px #fff;text-decoration:none;display:inline-block;text-align:center}
+.btn.sec{background:#fff;box-shadow:inset -4px -4px 0 #aaa,0 0 0 4px #fff}
+.btn[disabled]{background:#555;color:#aaa;box-shadow:0 0 0 4px #777;cursor:not-allowed}
+.hint{font-size:20px;color:#bbb}
+.claimbox{border:4px solid var(--gold);padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.claimbox span{font-family:var(--px);font-size:8px;line-height:1.6;color:var(--gold)}
+.claimbox p{font-size:24px;overflow-wrap:anywhere}
+.claimbox p.code{font-family:var(--px);font-size:24px;letter-spacing:6px;color:#fff}
+.fld{display:flex;flex-direction:column;gap:8px;font-family:var(--px);font-size:9px}
+.fld input{font-family:var(--txt);font-size:24px;padding:8px 10px;background:#fff;color:var(--ink);border:4px solid #fff;border-radius:0}
+
+#adminBtn{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:18px;opacity:.35;padding:6px}
+#adminBtn:hover,#adminBtn:focus-visible{opacity:1}
+.fld textarea,.fld select{font-family:var(--txt);font-size:22px;padding:8px 10px;background:#fff;color:var(--ink);border:4px solid #fff;border-radius:0}
+.arow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;border-bottom:2px dashed #555;padding:8px 0}
+.ai{font-family:var(--txt);font-size:22px;padding:6px 8px;background:#fff;color:var(--ink);border:4px solid #fff;border-radius:0;min-width:0}
+.dlg.wide{max-width:680px}
+@media (max-width:520px){ body{font-size:20px} .hud{font-size:8px} .grid{gap:22px 14px} }
+@media (prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important} }
+
+/* ---------- sprite opzionali: se il file esiste in assets/ sostituisce il disegno CSS ---------- */
+.spr-block-q .blk:not(.used){background:var(--spr-block-q) center/100% 100% no-repeat;border:0;box-shadow:none;color:transparent;text-shadow:none}
+.spr-block-used .blk.used{background:var(--spr-block-used) center/100% 100% no-repeat;border:0;box-shadow:none}
+.spr-coin .coin{background:var(--spr-coin) center/100% 100% no-repeat;border:0;box-shadow:none}
+</style>
+</head>
+<body>
+
+<div id="boot" role="button" tabindex="0" aria-label="Premi per iniziare">
+  <h1>FAI UN<br>REGALO A<br>MRBIGARI</h1>
+  <p>LA LISTA DEI DESIDERI</p>
+  <div class="start">PRESS START</div>
+</div>
+
+<div class="hud" aria-live="polite">
+  <div><b>REGALI</b><span id="hudN">00</span></div>
+  <div><b>PRESI</b><span id="hudT">0/0</span></div>
+  <div><b>MONDO</b><span id="hudW">TUTTI</span></div>
+</div>
+
+<header>
+  <i class="cloud c1"></i><i class="cloud c2"></i>
+  <h2>FAI UN REGALO A MRBIGARI</h2>
+  <p>Scegli una categoria e scopri cosa regalare (ricordati di colpire il blocco per contrassegnarlo come scelto!)</p>
+</header>
+
+<section class="controls" aria-label="Filtri">
+  <div class="pipes" id="worlds"></div>
+  <div class="row2">
+    <label>FASCIA <select id="range"></select></label>
+    <label>ORDINA <select id="sort">
+      <option value="prio">Più desiderati</option>
+      <option value="asc">Prezzo crescente</option>
+      <option value="desc">Prezzo decrescente</option>
+      <option value="new">Più recenti</option>
+    </select></label>
+  </div>
+</section>
+
+<main>
+  <ul class="grid" id="grid"></ul>
+  <div class="goal" id="goal"><div class="pole"></div><span>FINE DEL MONDO</span></div>
+</main>
+
+<footer><button id="adminBtn" aria-label="Area admin" title="Area admin">🔒</button></footer>
+
+<div id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle"><div class="dlg" id="dlg"></div></div>
+<div id="admin" role="dialog" aria-modal="true" aria-label="Area admin"><div class="dlg wide"><h3>AREA ADMIN</h3><div class="btns" id="adminTabs"></div><div id="adminBody"></div><div class="btns"><button class="btn sec" data-a="close">CHIUDI</button></div></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script>
+/* ============================================================
+   FAI UN REGALO A MRBIGARI — versione collegata a Supabase
+   ============================================================ */
+const SHOW_BOOT_SCREEN = true;      // false = salta la schermata PRESS START
+
+// Dati del progetto Supabase (Project Settings > API)
+// La chiave "anon public" è fatta per stare nel frontend (la protezione è nelle RLS).
+// Non inserire MAI la chiave "service_role".
+const SUPABASE_URL = 'https://kdtgzhdavopwuptzkkos.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_ZIR4FhICB4Vb99bwOtf2pg_onPQiPnr';
+const BUCKET = 'gift-images';
+const CONFIGURED = !SUPABASE_URL.includes('XXXX') && !SUPABASE_ANON_KEY.includes('XXXX');
+const sb = CONFIGURED ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+// token del dispositivo + blocchi presi da qui (localStorage, con fallback in memoria)
+const mem = {};
+const store = {
+  get(k){ try{ return localStorage.getItem(k); }catch(e){ return mem[k] ?? null; } },
+  set(k,v){ try{ localStorage.setItem(k,v); }catch(e){ mem[k]=v; } }
+};
+function uuid(){
+  if(window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return (c==='x'?r:(r&3|8)).toString(16);});
+}
+let MY_TOKEN = store.get('wl_token');
+if(!MY_TOKEN){ MY_TOKEN = uuid(); store.set('wl_token', MY_TOKEN); }
+let mySet = new Set();
+try{ mySet = new Set(JSON.parse(store.get('wl_mine')||'[]')); }catch(e){}
+const saveMine = () => store.set('wl_mine', JSON.stringify([...mySet]));
+let myCodes = {};
+try{ myCodes = JSON.parse(store.get('wl_codes')||'{}'); }catch(e){}
+const saveCodes = () => store.set('wl_codes', JSON.stringify(myCodes));
+const isMine = id => mySet.has(id);
+
+let CATS = [], GIFTS = [], claims = {};   // riempiti da loadData()
+
+// priorità -> power-up
+const PU = {1:{n:'Stella',e:'⭐'}, 2:{n:'Fiore di fuoco',e:'🌼'}, 3:{n:'Fungo',e:'🍄'}};
+
+// fasce di prezzo (costante nel codice, nessuna tabella)
+const RANGES = [
+  {id:'all', label:'Tutte',        test:()=>true},
+  {id:'lt25',label:'Sotto 25 €',   test:p=>p!=null&&p<25},
+  {id:'25',  label:'25 – 50 €',    test:p=>p!=null&&p>=25&&p<50},
+  {id:'50',  label:'50 – 100 €',   test:p=>p!=null&&p>=50&&p<=100},
+  {id:'gt100',label:'Oltre 100 €', test:p=>p!=null&&p>100},
+  {id:'nd',  label:'Senza prezzo', test:p=>p==null}
+];
+
+const state = {cat:'all', range:'all', sort:'prio'};
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const eur = p => p==null ? 'N/D' : p.toLocaleString('it-IT',{maximumFractionDigits:2});
+
+/* ---------- sprite opzionali in assets/ ---------- */
+['block-q','block-used','coin'].forEach(n=>{
+  const im = new Image();
+  im.onload = () => {
+    document.documentElement.style.setProperty('--spr-'+n, `url(assets/${n}.png)`);
+    document.documentElement.classList.add('spr-'+n);
+  };
+  im.src = `assets/${n}.png`;
+});
+
+/* ---------- filtri ---------- */
+function renderWorlds(){
+  const tabs = [{id:'all',label:'TUTTI'}].concat(CATS.map((c,i)=>({id:c.id,label:`${i+1} ${c.emoji} ${c.name.toUpperCase()}`})));
+  $('#worlds').innerHTML = tabs.map(t=>`<button class="pipe" data-cat="${esc(t.id)}" aria-pressed="${state.cat===t.id}">${esc(t.label)}</button>`).join('');
+}
+$('#range').innerHTML = RANGES.map(r=>`<option value="${r.id}">${r.label}</option>`).join('');
+
+function visibleGifts(){
+  const r = RANGES.find(x=>x.id===state.range);
+  let list = GIFTS.filter(g=>(state.cat==='all'||g.cat===state.cat) && r.test(g.price));
+  const byNew = (a,b)=>b.created.localeCompare(a.created);
+  const priceCmp = dir => (a,b)=>{
+    if(a.price==null&&b.price==null) return 0;
+    if(a.price==null) return 1;   // senza prezzo sempre in fondo
+    if(b.price==null) return -1;
+    return dir*(a.price-b.price);
+  };
+  if(state.sort==='prio') list.sort((a,b)=>a.priority-b.priority||byNew(a,b));
+  if(state.sort==='asc')  list.sort(priceCmp(1));
+  if(state.sort==='desc') list.sort(priceCmp(-1));
+  if(state.sort==='new')  list.sort(byNew);
+  return list;
+}
+
+/* ---------- griglia ---------- */
+function renderGrid(){
+  const list = visibleGifts();
+  $('#grid').innerHTML = list.length ? list.map(g=>{
+    const taken = !!claims[g.id];
+    return `<li><button class="item${taken?' taken':''}" data-id="${esc(g.id)}" aria-label="${esc(g.title)}${taken?' (già preso)':''}">
+      <span class="blk${taken?' used':''}">${taken?'':'?'}<span class="badge" title="${PU[g.priority].n}">${PU[g.priority].e}</span></span>
+      <span class="name">${esc(g.title)}</span>
+      <span class="price"><i class="coin"></i>${g.price==null?'N/D':'×'+eur(g.price)}</span>
+      ${taken?'<span class="tag">GIÀ PRESO</span>':''}
+    </button></li>`;
+  }).join('') : `<li class="empty" style="grid-column:1/-1">NESSUN BLOCCO QUI.<br>Prova un altro mondo o un'altra fascia.</li>`;
+  $('#goal').style.display = list.length ? 'flex' : 'none';
+  hud();
+}
+function hud(){
+  const list = visibleGifts();
+  const w = state.cat==='all' ? 'TUTTI' : (CATS.findIndex(c=>c.id===state.cat)+1)+'-1 '+CATS.find(c=>c.id===state.cat).name.toUpperCase();
+  $('#hudN').textContent = String(list.length).padStart(2,'0');
+  $('#hudT').textContent = list.filter(g=>claims[g.id]).length+'/'+list.length;
+  $('#hudW').textContent = w;
+}
+
+/* ---------- scheda regalo ---------- */
+let openId = null;
+function openModal(id){
+  const g = GIFTS.find(x=>x.id===id); if(!g) return;
+  openId = id;
+  const c = claims[id], mine = !!c && isMine(id), other = !!c && !mine;
+  const cat = CATS.find(c=>c.id===g.cat);
+  $('#dlg').innerHTML = `
+    <h3 id="mTitle">${esc(g.title)}</h3>
+    <div class="pic">${picHtml(g)}</div>
+    <div class="meta">
+      <span>${PU[g.priority].e} ${PU[g.priority].n}</span>
+      <span class="price" style="font-size:9px"><i class="coin"></i>${g.price==null?'PREZZO N/D':'×'+eur(g.price)+' €'}</span>
+      ${cat?`<span>${cat.emoji} ${esc(cat.name)}</span>`:''}
+    </div>
+    ${g.note?`<p class="note">${esc(g.note)}</p>`:''}
+    ${mine?`<div class="claimbox"><span>IL TUO CODICE</span><p class="code">${esc(myCodes[id]||'----')}</p></div>`:''}
+    <div id="mx"></div>
+    <div class="btns">
+      ${!c && !isAdmin ? `<button class="btn" data-act="claim">COLPISCI IL BLOCCO</button>` : ''}
+      ${mine ? `<button class="btn sec" data-act="unclaim">ANNULLA</button>` : ''}
+      ${other ? `<button class="btn" data-act="reveal">CHI L'HA PRESO?</button><button class="btn sec" data-act="unlock">RICHIEDI SBLOCCO</button><button class="btn sec" data-act="codeform">ANNULLA CON CODICE</button>` : ''}
+      ${safeUrl(g.url)?`<a class="btn sec" href="${esc(g.url)}" target="_blank" rel="noopener">VEDI IL NEGOZIO</a>`:''}
+      <button class="btn sec" data-act="close">CHIUDI</button>
+    </div>
+    ${mine?'<p class="hint">Da questo dispositivo puoi annullare subito; da un altro serve il codice.</p>':''}`;
+  $('#modal').classList.add('on');
+  $('#dlg [data-act]').focus();
+}
+function closeModal(){ $('#modal').classList.remove('on'); openId=null; }
+
+function claimForm(id){
+  const g = GIFTS.find(x=>x.id===id);
+  $('#dlg').innerHTML = `
+    <h3 id="mTitle">${esc(g.title)}</h3>
+    <p class="note">Lascia nome e telefono: chi vorrà fare lo stesso regalo potrà contattarti.</p>
+    <label class="fld">NOME<input id="nameIn" maxlength="60" autocomplete="name"></label>
+    <label class="fld">TELEFONO<input id="phoneIn" type="tel" maxlength="20" autocomplete="tel"></label>
+    <p class="hint">Nome e telefono potranno essere mostrati a chi vuole fare lo stesso regalo.</p>
+    <p class="hint" id="noteErr" role="alert"></p>
+    <div class="btns"><button class="btn" data-act="confirm">CONFERMA</button><button class="btn sec" data-act="back">INDIETRO</button></div>`;
+  $('#nameIn').focus();
+}
+function confirmClaim(){
+  const name = $('#nameIn').value.trim(), phone = $('#phoneIn').value.trim(), err = $('#noteErr');
+  if(name.length<2){ err.textContent='Scrivi il tuo nome.'; return; }
+  if(!/^[+0-9 ()-]{6,20}$/.test(phone)){ err.textContent='Controlla il numero di telefono.'; return; }
+  hitBlock(openId, name, phone);
+}
+
+let busy = false;
+async function hitBlock(id, name, phone){
+  if(busy) return; busy = true;
+  try{
+    const {data, error} = await sb.rpc('claim_gift', {p_gift_id:id, p_token:MY_TOKEN, p_name:name, p_phone:phone});
+    if(error) throw error;
+    if(!data){ await loadData(); renderGrid(); openModal(id); return; }   // preso nel frattempo
+    mySet.add(id); myCodes[id] = data; saveMine(); saveCodes();
+    await loadData(); renderGrid();
+    const g = GIFTS.find(x=>x.id===id);
+    $('#dlg').innerHTML = `<h3 id="mTitle">BLOCCO COLPITO!</h3><p class="note">${esc(g.title)}</p>
+      <div class="claimbox"><span>IL TUO CODICE</span><p class="code">${esc(data)}</p></div>
+      <p class="note">Ricordati di conservare o fare uno screen a questo codice: ti serve per annullare da un altro dispositivo.</p>
+      <div class="btns"><button class="btn" data-act="done">HO SALVATO IL CODICE</button></div>`;
+  }catch(e){
+    console.error(e);
+    const el = $('#noteErr'); if(el) el.textContent = 'Qualcosa è andato storto, riprova.';
+  }finally{ busy = false; }
+}
+function bumpBlock(id){
+  const el = document.querySelector(`.item[data-id="${id}"]`); if(!el) return;
+  el.parentElement.classList.add('bump');
+  const c = document.createElement('span'); c.className='pop'; c.textContent='🪙';
+  el.appendChild(c); setTimeout(()=>c.remove(),750);
+}
+async function release(id){
+  if(busy) return; busy = true;
+  try{
+    const {error} = await sb.rpc('unclaim_gift', {p_gift_id:id, p_token:MY_TOKEN});
+    if(error) throw error;
+    mySet.delete(id); delete myCodes[id]; saveMine(); saveCodes();
+    await loadData(); closeModal(); renderGrid();
+  }catch(e){
+    console.error(e); alert('Non sono riuscito ad annullare, riprova.');
+  }finally{ busy = false; }
+}
+async function reveal(id){
+  const {data, error} = await sb.rpc('reveal_claim', {p_gift_id:id});
+  if(error){ $('#mx').innerHTML = `<p class="hint">${/rate_limited/.test(error.message)?'Troppe richieste, riprova tra un minuto.':'Non riesco a mostrarlo, riprova.'}</p>`; return; }
+  const r = data && data[0];
+  $('#mx').innerHTML = r
+    ? `<div class="claimbox"><span>L'HA PRESO</span><p>${esc(r.out_name)}<br><a href="tel:${esc(r.out_phone)}" style="color:#fff">${esc(r.out_phone)}</a></p></div>`
+    : '<p class="hint">Il blocco è stato liberato nel frattempo.</p>';
+}
+async function requestUnlock(id){
+  const {data, error} = await sb.rpc('request_unlock', {p_gift_id:id});
+  $('#mx').innerHTML = `<p class="hint">${error?'Non riesco a inviare la richiesta, riprova.':data?'Richiesta inviata: l\'admin la vedrà senza sapere di quale regalo si tratta.':'Il blocco è già libero.'}</p>`;
+}
+function codeForm(){
+  $('#mx').innerHTML = `<label class="fld">CODICE A 4 CIFRE<input id="codeIn" inputmode="numeric" maxlength="4" autocomplete="off"></label>
+    <div class="btns"><button class="btn" data-act="submitcode">ANNULLA IL BLOCCO</button></div><p class="hint" id="codeErr" role="alert"></p>`;
+  $('#codeIn').focus();
+}
+async function submitCode(id){
+  const code = $('#codeIn').value.trim(), err = $('#codeErr');
+  if(!/^\d{4}$/.test(code)){ err.textContent='Servono 4 cifre.'; return; }
+  const {data, error} = await sb.rpc('unclaim_gift_with_code', {p_gift_id:id, p_code:code});
+  if(error){ err.textContent='Riprova tra poco.'; return; }
+  if(data==='ok'){ await loadData(); closeModal(); renderGrid(); return; }
+  err.textContent = data==='locked' ? 'Troppi tentativi: usa "Richiedi sblocco".' : data==='wrong' ? 'Codice errato.' : 'Il blocco è già libero.';
+  if(data==='none'){ await loadData(); renderGrid(); }
+}
+
+/* ---------- eventi (delegati: niente id inline negli onclick) ---------- */
+$('#worlds').addEventListener('click',e=>{
+  const b = e.target.closest('[data-cat]'); if(!b) return;
+  state.cat = b.dataset.cat; renderWorlds(); renderGrid();
+});
+$('#range').addEventListener('change',e=>{state.range=e.target.value;renderGrid();});
+$('#sort').addEventListener('change',e=>{state.sort=e.target.value;renderGrid();});
+$('#grid').addEventListener('click',e=>{
+  const b = e.target.closest('.item'); if(b) openModal(b.dataset.id);
+});
+$('#modal').addEventListener('click',e=>{
+  if(e.target.id==='modal') return closeModal();
+  const a = e.target.closest('[data-act]'); if(!a) return;
+  if(a.dataset.act==='close') closeModal();
+  if(a.dataset.act==='claim') claimForm(openId);
+  if(a.dataset.act==='back') openModal(openId);
+  if(a.dataset.act==='confirm') confirmClaim();
+  if(a.dataset.act==='reveal') reveal(openId);
+  if(a.dataset.act==='unlock') requestUnlock(openId);
+  if(a.dataset.act==='codeform') codeForm();
+  if(a.dataset.act==='submitcode') submitCode(openId);
+  if(a.dataset.act==='done'){ const id = openId; closeModal(); bumpBlock(id); }
+  if(a.dataset.act==='unclaim') release(openId);
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape') closeModal();
+  if(e.key==='Enter' && (e.target.id==='nameIn'||e.target.id==='phoneIn')) confirmClaim();
+  if(e.key==='Enter' && e.target.id==='codeIn') submitCode(openId);
+});
+
+/* ---------- schermata iniziale ---------- */
+function startGame(){ $('#boot').classList.add('off'); }
+$('#boot').addEventListener('click',startGame);
+$('#boot').addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' ') startGame(); });
+if(!SHOW_BOOT_SCREEN) startGame(); else $('#boot').focus();
+
+/* ---------- dati da Supabase ---------- */
+const pubUrl = p => sb.storage.from(BUCKET).getPublicUrl(p).data.publicUrl;
+const safeUrl = u => /^https?:\/\//i.test(u||'') ? u : '';
+const picHtml = g => g.imagePath ? `<img src="${esc(pubUrl(g.imagePath))}" alt="${esc(g.title)}">` : '🎁';
+
+async function loadData(){
+  const [c,g,cl] = await Promise.all([
+    sb.from('categories').select('id,name,emoji,sort_order').order('sort_order').order('name'),
+    sb.from('gifts').select('id,title,note,url,image_path,price,priority,category_id,created_at'),
+    sb.from('claims').select('gift_id')   // mai select('*'): il token non è leggibile
+  ]);
+  const err = c.error || g.error || cl.error; if(err) throw err;
+  CATS = c.data.map(x=>({id:x.id, name:x.name, emoji:x.emoji||'', sort:x.sort_order}));
+  GIFTS = g.data.map(x=>({id:x.id, title:x.title, note:x.note, url:x.url, imagePath:x.image_path,
+    price:x.price==null?null:Number(x.price), priority:x.priority, cat:x.category_id, created:x.created_at}));
+  claims = {}; cl.data.forEach(r=>{ claims[r.gift_id] = {}; });
+  let changed = false;
+  if(!isAdmin) mySet.forEach(id=>{ if(!claims[id]){ mySet.delete(id); delete myCodes[id]; changed = true; } });  // da admin i claim sono nascosti: non pulire
+  if(changed){ saveMine(); saveCodes(); }
+}
+function showMsg(html){
+  $('#grid').innerHTML = `<li class="empty" style="grid-column:1/-1">${html}</li>`;
+  $('#goal').style.display = 'none';
+}
+/* ---------- area admin ---------- */
+let isAdmin = false, uid = null, adminTab = 'req';
+const A = () => $('#adminBody');
+function setSession(sess){
+  isAdmin = !!sess; uid = sess ? sess.user.id : null;
+  $('#adminBtn').textContent = isAdmin ? '🔓' : '🔒';
+}
+async function initAuth(){
+  const {data} = await sb.auth.getSession();
+  setSession(data.session);
+  sb.auth.onAuthStateChange((_e, sess)=>{
+    const was = isAdmin; setSession(sess);
+    if(was !== isAdmin) setTimeout(async ()=>{            // niente await di Supabase dentro il callback
+      await loadData(); renderWorlds(); renderGrid();
+      if($('#admin').classList.contains('on')) adminRender();
+    },0);
+  });
+}
+function adminRender(){
+  const tabs = $('#adminTabs');
+  if(!isAdmin){
+    tabs.innerHTML = '';
+    A().innerHTML = `<label class="fld">EMAIL<input id="aEmail" type="email" autocomplete="username"></label>
+      <label class="fld">PASSWORD<input id="aPass" type="password" autocomplete="current-password"></label>
+      <p class="hint" id="aErr" role="alert"></p><div class="btns"><button class="btn" data-a="login">ACCEDI</button></div>`;
+    return;
+  }
+  tabs.innerHTML = [['req','RICHIESTE'],['gifts','REGALI'],['cats','CATEGORIE']].map(([t,l])=>
+    `<button class="btn${adminTab===t?'':' sec'}" data-a="tab" data-t="${t}">${l}</button>`).join('')
+    + '<button class="btn sec" data-a="logout">ESCI</button>';
+  ({req:viewReq, gifts:viewGifts, cats:viewCats}[adminTab])();
+}
+async function doLogin(){
+  const {error} = await sb.auth.signInWithPassword({email:$('#aEmail').value.trim(), password:$('#aPass').value});
+  if(error) $('#aErr').textContent = 'Accesso non riuscito.';
+}
+async function reload(){ await loadData(); renderWorlds(); renderGrid(); }
+
+/* richieste di sblocco: solo codice, nome, telefono (mai il regalo) */
+async function viewReq(){
+  A().innerHTML = '<p class="hint">Carico…</p>';
+  const {data, error} = await sb.rpc('admin_list_unlock_requests');
+  if(error){ A().innerHTML = '<p class="hint">Errore nel caricamento.</p>'; return; }
+  A().innerHTML = data.length ? data.map(r=>`<div class="arow"><div style="flex:1"><b style="font-family:var(--px);font-size:11px">${esc(r.out_code)}</b>
+    ${esc(r.out_name)} · <a href="tel:${esc(r.out_phone)}" style="color:#fff">${esc(r.out_phone)}</a></div>
+    <button class="btn" data-a="rel" data-c="${esc(r.out_code)}">SBLOCCA</button>
+    <button class="btn sec" data-a="dis" data-c="${esc(r.out_code)}">CHIUDI</button></div>`).join('')
+    : '<p class="note">Nessuna richiesta di sblocco.</p>';
+}
+
+/* categorie */
+function viewCats(){
+  const row = c => `<div class="arow" data-id="${esc(c.id||'')}">
+    <input class="ai" data-f="emoji" value="${esc(c.emoji||'')}" maxlength="4" style="width:64px" aria-label="Emoji">
+    <input class="ai" data-f="name" value="${esc(c.name||'')}" maxlength="40" placeholder="Nome" style="flex:1;min-width:120px" aria-label="Nome">
+    <input class="ai" data-f="sort" type="number" value="${c.sort??0}" style="width:72px" aria-label="Ordine">
+    <button class="btn" data-a="csave">${c.id?'SALVA':'AGGIUNGI'}</button>${c.id?'<button class="btn sec" data-a="cdel">ELIMINA</button>':''}</div>`;
+  A().innerHTML = CATS.map(row).join('') + '<p class="hint">Nuova categoria:</p>' + row({});
+}
+async function saveCat(b){
+  const r = b.closest('.arow'), id = r.dataset.id, f = n => r.querySelector(`[data-f="${n}"]`).value.trim();
+  if(!f('name')){ alert('Serve un nome.'); return; }
+  const row = {name:f('name'), emoji:f('emoji')||null, sort_order:Number(f('sort'))||0};
+  const {error} = id ? await sb.from('categories').update(row).eq('id', id) : await sb.from('categories').insert({...row, user_id:uid});
+  if(error){ alert('Errore: '+error.message); return; }
+  await reload(); viewCats();
+}
+async function delCat(b){
+  if(!confirm('Eliminare la categoria? I suoi regali resteranno senza categoria.')) return;
+  const id = b.closest('.arow').dataset.id;
+  const {error} = await sb.from('categories').delete().eq('id', id);
+  if(error){ alert('Errore: '+error.message); return; }
+  if(state.cat === id) state.cat = 'all';
+  await reload(); viewCats();
+}
+
+/* regali */
+function viewGifts(){
+  const list = [...GIFTS].sort((a,b)=>b.created.localeCompare(a.created));
+  A().innerHTML = '<div class="btns"><button class="btn" data-a="gnew">+ NUOVO REGALO</button></div>' + (list.length ? list.map(g=>{
+    const c = CATS.find(x=>x.id===g.cat);
+    return `<div class="arow"><div style="flex:1">${esc(g.title)}<br><span class="hint">${g.price==null?'n/d':eur(g.price)+' €'} · ${c?esc((c.emoji+' '+c.name).trim()):'senza categoria'}</span></div>
+      <button class="btn sec" data-a="gedit" data-id="${esc(g.id)}">MODIFICA</button><button class="btn sec" data-a="gdel" data-id="${esc(g.id)}">ELIMINA</button></div>`;
+  }).join('') : '<p class="note">Ancora nessun regalo.</p>');
+}
+function giftForm(g){
+  g = g || {priority:2};
+  const cats = '<option value="">— nessuna —</option>' + CATS.map(c=>`<option value="${esc(c.id)}"${c.id===g.cat?' selected':''}>${esc((c.emoji+' '+c.name).trim())}</option>`).join('');
+  A().innerHTML = `<h3>${g.id?'MODIFICA REGALO':'NUOVO REGALO'}</h3>
+    <label class="fld">TITOLO<input id="gTitle" maxlength="80" value="${esc(g.title||'')}"></label>
+    <label class="fld">NOTA<textarea id="gNote" rows="3" maxlength="400">${esc(g.note||'')}</textarea></label>
+    <label class="fld">LINK<input id="gUrl" type="url" placeholder="https://..." value="${esc(g.url||'')}"></label>
+    <label class="fld">PREZZO IN € (VUOTO = N/D)<input id="gPrice" type="number" min="0" step="0.01" value="${g.price??''}"></label>
+    <label class="fld">PRIORITÀ<select id="gPrio">${[1,2,3].map(n=>`<option value="${n}"${n===g.priority?' selected':''}>${PU[n].e} ${PU[n].n}</option>`).join('')}</select></label>
+    <label class="fld">CATEGORIA<select id="gCat">${cats}</select></label>
+    <label class="fld">IMMAGINE${g.imagePath?' (SCEGLI UN FILE PER SOSTITUIRLA)':''}<input id="gFile" type="file" accept="image/*"></label>
+    ${g.imagePath?'<label class="hint"><input type="checkbox" id="gNoImg"> Rimuovi l\'immagine attuale</label>':''}
+    <p class="hint" id="gErr" role="alert"></p>
+    <div class="btns"><button class="btn" data-a="gsave" data-id="${esc(g.id||'')}">SALVA</button><button class="btn sec" data-a="tab" data-t="gifts">ANNULLA</button></div>`;
+}
+// ridimensiona (max 1200px, senza ritagliare) e comprime in WebP (JPEG se il browser non codifica WebP)
+async function shrink(file){
+  const bmp = await createImageBitmap(file), k = Math.min(1, 1200/Math.max(bmp.width, bmp.height));
+  const cv = document.createElement('canvas'); cv.width = Math.round(bmp.width*k); cv.height = Math.round(bmp.height*k);
+  cv.getContext('2d').drawImage(bmp, 0, 0, cv.width, cv.height);
+  const enc = t => new Promise(r=>cv.toBlob(r, t, 0.85));
+  let b = await enc('image/webp'); if(!b || b.type !== 'image/webp') b = await enc('image/jpeg');
+  return b;
+}
+async function saveGift(id){
+  const err = $('#gErr'), title = $('#gTitle').value.trim(), url = $('#gUrl').value.trim(), pv = $('#gPrice').value.trim();
+  if(!title){ err.textContent = 'Il titolo è obbligatorio.'; return; }
+  if(url && !safeUrl(url)){ err.textContent = 'Il link deve iniziare con http:// o https://'; return; }
+  const old = id ? GIFTS.find(x=>x.id===id) : null;
+  const row = {title, note:$('#gNote').value.trim()||null, url:url||null, price:pv===''?null:Number(pv),
+               priority:Number($('#gPrio').value), category_id:$('#gCat').value||null};
+  err.textContent = 'Salvo…';
+  try{
+    let path = old ? old.imagePath : null;
+    const f = $('#gFile').files[0];
+    if(f){
+      const b = await shrink(f), np = `${uid}/${uuid()}.${b.type==='image/webp'?'webp':'jpg'}`;
+      const up = await sb.storage.from(BUCKET).upload(np, b, {contentType:b.type}); if(up.error) throw up.error;
+      path = np;
+    } else if($('#gNoImg') && $('#gNoImg').checked) path = null;
+    row.image_path = path;
+    const {error} = id ? await sb.from('gifts').update(row).eq('id', id) : await sb.from('gifts').insert({...row, user_id:uid});
+    if(error) throw error;
+    if(old && old.imagePath && old.imagePath !== path) await sb.storage.from(BUCKET).remove([old.imagePath]);
+    await reload(); adminTab = 'gifts'; adminRender();
+  }catch(e){ console.error(e); err.textContent = 'Errore nel salvataggio: ' + (e.message||'riprova'); }
+}
+async function delGift(id){
+  const g = GIFTS.find(x=>x.id===id);
+  if(!g || !confirm(`Eliminare "${g.title}"?`)) return;
+  if(g.imagePath) await sb.storage.from(BUCKET).remove([g.imagePath]);   // prima il file, poi la riga
+  const {error} = await sb.from('gifts').delete().eq('id', id);
+  if(error){ alert('Errore: '+error.message); return; }
+  await reload(); viewGifts();
+}
+
+$('#adminBtn').addEventListener('click',()=>{ if(!CONFIGURED) return; $('#admin').classList.add('on'); adminRender(); });
+$('#admin').addEventListener('keydown',e=>{ if(e.key==='Enter' && e.target.id==='aPass') doLogin(); });
+$('#admin').addEventListener('click', async e=>{
+  const b = e.target.closest('[data-a]'); if(!b) return;
+  const a = b.dataset.a;
+  if(a==='close') return $('#admin').classList.remove('on');
+  if(a==='tab'){ adminTab = b.dataset.t; return adminRender(); }
+  if(a==='login') return doLogin();
+  if(a==='logout') return void await sb.auth.signOut();
+  if(a==='rel' || a==='dis'){
+    if(a==='rel' && !confirm('Sbloccare questo blocco?')) return;
+    await sb.rpc(a==='rel' ? 'admin_release_by_code' : 'admin_dismiss_request', {p_code:b.dataset.c});
+    return viewReq();
+  }
+  if(a==='csave') return saveCat(b);
+  if(a==='cdel') return delCat(b);
+  if(a==='gnew') return giftForm();
+  if(a==='gedit') return giftForm(GIFTS.find(x=>x.id===b.dataset.id));
+  if(a==='gsave') return saveGift(b.dataset.id);
+  if(a==='gdel') return delGift(b.dataset.id);
+});
+
+async function init(){
+  renderWorlds();
+  if(!CONFIGURED){ showMsg('SUPABASE NON CONFIGURATO.<br>Inserisci URL e chiave in cima allo script.'); return; }
+  showMsg('CARICAMENTO...');
+  try{ await initAuth(); await loadData(); renderWorlds(); renderGrid(); }
+  catch(e){ console.error(e); showMsg('IMPOSSIBILE CARICARE LA LISTA.<br>Riprova tra poco.'); }
+}
+init();
+</script>
+</body>
+</html>
