@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fai un regalo a MrBigari</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root{
+  --sky:#5c94fc; --gold:#f8b800; --gold-d:#c87800; --gold-l:#ffd870;
+  --brick:#c84c0c; --used:#b05c1c; --used-d:#6c3408; --pipe:#00a800; --pipe-d:#005800;
+  --ink:#000; --px:'Press Start 2P',monospace; --txt:'VT323',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{image-rendering:pixelated}
+body{background:var(--sky);color:#fff;font-family:var(--txt);font-size:22px;line-height:1.15;min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden}
+button{font-family:inherit;color:inherit;cursor:pointer;border:0;background:none}
+:focus-visible{outline:4px solid #fff;outline-offset:2px}
+
+/* ---------- schermata iniziale ---------- */
+#boot{position:fixed;inset:0;z-index:50;background:var(--sky);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;text-align:center;padding:24px;cursor:pointer}
+#boot.off{display:none}
+#boot h1{font-family:var(--px);font-size:clamp(28px,8vw,56px);line-height:1.3;color:var(--gold);text-shadow:4px 4px 0 var(--brick),8px 8px 0 var(--ink)}
+#boot p{font-family:var(--px);font-size:11px;line-height:1.8}
+#boot .start{font-family:var(--px);font-size:14px;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* ---------- hud ---------- */
+.hud{display:flex;flex-wrap:wrap;gap:10px 28px;justify-content:space-between;padding:14px 18px;font-family:var(--px);font-size:10px;line-height:1.6;text-shadow:2px 2px 0 var(--ink)}
+.hud b{display:block;font-weight:400}
+.hud span{display:block;color:#fff}
+
+/* ---------- testata ---------- */
+header{position:relative;text-align:center;padding:12px 16px 20px}
+header h2{font-family:var(--px);font-size:clamp(16px,4.6vw,30px);line-height:1.5;color:var(--gold);text-shadow:3px 3px 0 var(--brick),6px 6px 0 var(--ink);position:relative;z-index:1}
+header p{margin-top:14px;font-size:24px;text-shadow:2px 2px 0 var(--ink);position:relative;z-index:1}
+.cloud{position:absolute;width:64px;height:24px;background:#fff;box-shadow:0 0 0 4px #fff;border-radius:2px;opacity:.95}
+.cloud::before{content:'';position:absolute;left:14px;top:-16px;width:32px;height:16px;background:#fff}
+.c1{left:6%;top:18px}.c2{right:8%;top:56px;transform:scale(.75)}
+
+/* ---------- controlli ---------- */
+.controls{padding:0 16px 8px;display:flex;flex-direction:column;gap:14px;max-width:1100px;width:100%;margin:0 auto}
+.pipes{display:flex;flex-wrap:wrap;gap:10px}
+.pipe{font-family:var(--px);font-size:9px;line-height:1.4;padding:10px 12px;background:var(--pipe);color:#fff;
+  box-shadow:inset -4px 0 0 var(--pipe-d),inset 4px 0 0 #58d858,0 0 0 4px var(--ink);text-shadow:2px 2px 0 var(--pipe-d)}
+.pipe[aria-pressed="true"]{background:var(--gold);color:var(--ink);text-shadow:none;box-shadow:inset -4px 0 0 var(--gold-d),inset 4px 0 0 var(--gold-l),0 0 0 4px var(--ink)}
+.row2{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:center}
+.row2 label{font-family:var(--px);font-size:9px;text-shadow:2px 2px 0 var(--ink);display:flex;align-items:center;gap:10px}
+select{font-family:var(--txt);font-size:22px;padding:4px 8px;background:#fff;color:var(--ink);border:4px solid var(--ink);border-radius:0}
+
+/* ---------- griglia di blocchi ---------- */
+main{flex:1;max-width:1100px;width:100%;margin:0 auto;padding:18px 16px 28px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:26px 20px;list-style:none}
+.item{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;text-align:center;position:relative}
+.blk{position:relative;width:100%;aspect-ratio:1;display:grid;place-items:center;font-family:var(--px);font-size:34px;color:#fff;text-shadow:3px 3px 0 var(--ink);
+  border:4px solid var(--ink);background:
+   radial-gradient(circle,var(--ink) 0 2px,transparent 2.5px) left 6px top 6px/8px 8px no-repeat,
+   radial-gradient(circle,var(--ink) 0 2px,transparent 2.5px) right 6px top 6px/8px 8px no-repeat,
+   radial-gradient(circle,var(--ink) 0 2px,transparent 2.5px) left 6px bottom 6px/8px 8px no-repeat,
+   radial-gradient(circle,var(--ink) 0 2px,transparent 2.5px) right 6px bottom 6px/8px 8px no-repeat,
+   var(--gold);
+  box-shadow:inset -6px -6px 0 var(--gold-d),inset 6px 6px 0 var(--gold-l);transition:transform .08s steps(2)}
+.item:hover .blk:not(.used){transform:translateY(-6px)}
+.blk.used{background-color:var(--used);box-shadow:inset -6px -6px 0 var(--used-d),inset 6px 6px 0 #d88c4c;font-size:0}
+.badge{position:absolute;right:-10px;top:-14px;font-size:22px;filter:drop-shadow(2px 2px 0 #000);font-family:initial}
+.used .badge{opacity:.45}
+.name{font-size:21px;text-shadow:2px 2px 0 var(--ink);overflow-wrap:anywhere}
+.price{font-family:var(--px);font-size:9px;text-shadow:2px 2px 0 var(--ink);display:flex;align-items:center;gap:6px}
+.coin{display:inline-block;width:12px;height:16px;border-radius:50%;background:var(--gold);border:2px solid var(--ink);box-shadow:inset -3px 0 0 var(--gold-d)}
+.item.taken .name,.item.taken .price{opacity:.6}
+.tag{font-family:var(--px);font-size:8px;color:var(--ink);background:#fff;padding:3px 5px;box-shadow:0 0 0 2px var(--ink)}
+.bump .blk{animation:bump .3s steps(4)}
+@keyframes bump{40%{transform:translateY(-18px)}}
+.pop{position:absolute;left:50%;top:0;font-size:28px;pointer-events:none;animation:pop .7s steps(8) forwards;font-family:initial}
+@keyframes pop{from{transform:translate(-50%,0);opacity:1}to{transform:translate(-50%,-70px);opacity:0}}
+
+.empty{font-family:var(--px);font-size:11px;line-height:1.8;text-align:center;padding:40px 10px;text-shadow:2px 2px 0 var(--ink)}
+.goal{display:flex;justify-content:center;align-items:flex-end;gap:14px;margin-top:44px;font-family:var(--px);font-size:9px;text-shadow:2px 2px 0 var(--ink)}
+.pole{width:8px;height:84px;background:#fff;border:2px solid var(--ink);position:relative}
+.pole::before{content:'';position:absolute;left:-8px;top:-14px;width:20px;height:14px;background:var(--pipe);border:2px solid var(--ink)}
+
+footer{height:56px;background:
+  linear-gradient(0deg,var(--ink) 0 2px,transparent 2px) 0 0/100% 28px,
+  repeating-linear-gradient(90deg,var(--ink) 0 2px,var(--brick) 2px 32px);border-top:4px solid var(--ink)}
+
+/* ---------- finestra di dialogo ---------- */
+#modal{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:16px;overflow:auto}
+#modal.on{display:flex}
+.dlg{background:var(--ink);color:#fff;width:100%;max-width:440px;padding:18px;box-shadow:0 0 0 4px #fff,0 0 0 8px var(--ink);display:flex;flex-direction:column;gap:14px;max-height:100%;overflow:auto}
+.dlg h3{font-family:var(--px);font-size:13px;line-height:1.6;color:var(--gold)}
+.pic{height:150px;display:grid;place-items:center;font-size:72px;background:linear-gradient(#5c94fc,#a8c8ff);border:4px solid #fff;font-family:initial}
+.pic img{width:100%;height:100%;object-fit:cover;image-rendering:auto}
+.meta{display:flex;flex-wrap:wrap;gap:8px 16px;font-family:var(--px);font-size:9px;line-height:1.6;align-items:center}
+.note{font-size:24px;line-height:1.2;border-left:4px solid var(--gold);padding-left:12px}
+.btns{display:flex;flex-wrap:wrap;gap:12px}
+.btn{font-family:var(--px);font-size:10px;line-height:1.5;padding:12px 14px;background:var(--gold);color:var(--ink);box-shadow:inset -4px -4px 0 var(--gold-d),inset 4px 4px 0 var(--gold-l),0 0 0 4px #fff;text-decoration:none;display:inline-block;text-align:center}
+.btn.sec{background:#fff;box-shadow:inset -4px -4px 0 #aaa,0 0 0 4px #fff}
+.btn[disabled]{background:#555;color:#aaa;box-shadow:0 0 0 4px #777;cursor:not-allowed}
+.hint{font-size:20px;color:#bbb}
+.claimbox{border:4px solid var(--gold);padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.claimbox span{font-family:var(--px);font-size:8px;line-height:1.6;color:var(--gold)}
+.claimbox p{font-size:24px;overflow-wrap:anywhere}
+.fld{display:flex;flex-direction:column;gap:8px;font-family:var(--px);font-size:9px}
+.fld input{font-family:var(--txt);font-size:24px;padding:8px 10px;background:#fff;color:var(--ink);border:4px solid #fff;border-radius:0}
+
+@media (max-width:520px){ body{font-size:20px} .hud{font-size:8px} .grid{gap:22px 14px} }
+@media (prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important} }
+
+/* ---------- sprite opzionali: se il file esiste in assets/ sostituisce il disegno CSS ---------- */
+.spr-block-q .blk:not(.used){background:var(--spr-block-q) center/100% 100% no-repeat;border:0;box-shadow:none;color:transparent;text-shadow:none}
+.spr-block-used .blk.used{background:var(--spr-block-used) center/100% 100% no-repeat;border:0;box-shadow:none}
+.spr-coin .coin{background:var(--spr-coin) center/100% 100% no-repeat;border:0;box-shadow:none}
+</style>
+</head>
+<body>
+
+<div id="boot" role="button" tabindex="0" aria-label="Premi per iniziare">
+  <h1>FAI UN<br>REGALO A<br>MRBIGARI</h1>
+  <p>LA LISTA DEI DESIDERI</p>
+  <div class="start">PRESS START</div>
+</div>
+
+<div class="hud" aria-live="polite">
+  <div><b>REGALI</b><span id="hudN">00</span></div>
+  <div><b>PRESI</b><span id="hudT">0/0</span></div>
+  <div><b>MONDO</b><span id="hudW">TUTTI</span></div>
+</div>
+
+<header>
+  <i class="cloud c1"></i><i class="cloud c2"></i>
+  <h2>FAI UN REGALO A MRBIGARI</h2>
+  <p>Scegli una categoria e scopri cosa regalare (ricordati di colpire il blocco per contrassegnarlo come scelto!)</p>
+</header>
+
+<section class="controls" aria-label="Filtri">
+  <div class="pipes" id="worlds"></div>
+  <div class="row2">
+    <label>FASCIA <select id="range"></select></label>
+    <label>ORDINA <select id="sort">
+      <option value="prio">Più desiderati</option>
+      <option value="asc">Prezzo crescente</option>
+      <option value="desc">Prezzo decrescente</option>
+      <option value="new">Più recenti</option>
+    </select></label>
+  </div>
+</section>
+
+<main>
+  <ul class="grid" id="grid"></ul>
+  <div class="goal" id="goal"><div class="pole"></div><span>FINE DEL MONDO</span></div>
+</main>
+
+<footer></footer>
+
+<div id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle"><div class="dlg" id="dlg"></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script>
+/* ============================================================
+   FAI UN REGALO A MRBIGARI — versione collegata a Supabase
+   ============================================================ */
+const SHOW_BOOT_SCREEN = true;      // false = salta la schermata PRESS START
+const NOTE_REQUIRED = true;         // true = chi prende il regalo deve lasciare almeno il nome
+
+// Dati del progetto Supabase (Project Settings > API)
+// La chiave "anon public" è fatta per stare nel frontend (la protezione è nelle RLS).
+// Non inserire MAI la chiave "service_role".
+const SUPABASE_URL = 'https://kdtgzhdavopwuptzkkos.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_ZIR4FhICB4Vb99bwOtf2pg_onPQiPnr';
+const BUCKET = 'gift-images';
+const CONFIGURED = !SUPABASE_URL.includes('XXXX') && !SUPABASE_ANON_KEY.includes('XXXX');
+const sb = CONFIGURED ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+// token del dispositivo + blocchi presi da qui (localStorage, con fallback in memoria)
+const mem = {};
+const store = {
+  get(k){ try{ return localStorage.getItem(k); }catch(e){ return mem[k] ?? null; } },
+  set(k,v){ try{ localStorage.setItem(k,v); }catch(e){ mem[k]=v; } }
+};
+function uuid(){
+  if(window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return (c==='x'?r:(r&3|8)).toString(16);});
+}
+let MY_TOKEN = store.get('wl_token');
+if(!MY_TOKEN){ MY_TOKEN = uuid(); store.set('wl_token', MY_TOKEN); }
+let mySet = new Set();
+try{ mySet = new Set(JSON.parse(store.get('wl_mine')||'[]')); }catch(e){}
+const saveMine = () => store.set('wl_mine', JSON.stringify([...mySet]));
+const isMine = id => mySet.has(id);
+
+let CATS = [], GIFTS = [], claims = {};   // riempiti da loadData()
+
+// priorità -> power-up
+const PU = {1:{n:'Stella',e:'⭐'}, 2:{n:'Fiore di fuoco',e:'🌼'}, 3:{n:'Fungo',e:'🍄'}};
+
+// fasce di prezzo (costante nel codice, nessuna tabella)
+const RANGES = [
+  {id:'all', label:'Tutte',        test:()=>true},
+  {id:'lt25',label:'Sotto 25 €',   test:p=>p!=null&&p<25},
+  {id:'25',  label:'25 – 50 €',    test:p=>p!=null&&p>=25&&p<50},
+  {id:'50',  label:'50 – 100 €',   test:p=>p!=null&&p>=50&&p<=100},
+  {id:'gt100',label:'Oltre 100 €', test:p=>p!=null&&p>100},
+  {id:'nd',  label:'Senza prezzo', test:p=>p==null}
+];
+
+const state = {cat:'all', range:'all', sort:'prio'};
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const eur = p => p==null ? 'N/D' : p.toLocaleString('it-IT',{maximumFractionDigits:2});
+
+/* ---------- sprite opzionali in assets/ ---------- */
+['block-q','block-used','coin'].forEach(n=>{
+  const im = new Image();
+  im.onload = () => {
+    document.documentElement.style.setProperty('--spr-'+n, `url(assets/${n}.png)`);
+    document.documentElement.classList.add('spr-'+n);
+  };
+  im.src = `assets/${n}.png`;
+});
+
+/* ---------- filtri ---------- */
+function renderWorlds(){
+  const tabs = [{id:'all',label:'TUTTI'}].concat(CATS.map((c,i)=>({id:c.id,label:`${i+1} ${c.emoji} ${c.name.toUpperCase()}`})));
+  $('#worlds').innerHTML = tabs.map(t=>`<button class="pipe" data-cat="${esc(t.id)}" aria-pressed="${state.cat===t.id}">${esc(t.label)}</button>`).join('');
+}
+$('#range').innerHTML = RANGES.map(r=>`<option value="${r.id}">${r.label}</option>`).join('');
+
+function visibleGifts(){
+  const r = RANGES.find(x=>x.id===state.range);
+  let list = GIFTS.filter(g=>(state.cat==='all'||g.cat===state.cat) && r.test(g.price));
+  const byNew = (a,b)=>b.created.localeCompare(a.created);
+  const priceCmp = dir => (a,b)=>{
+    if(a.price==null&&b.price==null) return 0;
+    if(a.price==null) return 1;   // senza prezzo sempre in fondo
+    if(b.price==null) return -1;
+    return dir*(a.price-b.price);
+  };
+  if(state.sort==='prio') list.sort((a,b)=>a.priority-b.priority||byNew(a,b));
+  if(state.sort==='asc')  list.sort(priceCmp(1));
+  if(state.sort==='desc') list.sort(priceCmp(-1));
+  if(state.sort==='new')  list.sort(byNew);
+  return list;
+}
+
+/* ---------- griglia ---------- */
+function renderGrid(){
+  const list = visibleGifts();
+  $('#grid').innerHTML = list.length ? list.map(g=>{
+    const taken = !!claims[g.id];
+    return `<li><button class="item${taken?' taken':''}" data-id="${esc(g.id)}" aria-label="${esc(g.title)}${taken?' (già preso)':''}">
+      <span class="blk${taken?' used':''}">${taken?'':'?'}<span class="badge" title="${PU[g.priority].n}">${PU[g.priority].e}</span></span>
+      <span class="name">${esc(g.title)}</span>
+      <span class="price"><i class="coin"></i>${g.price==null?'N/D':'×'+eur(g.price)}</span>
+      ${taken?'<span class="tag">GIÀ PRESO</span>':''}
+    </button></li>`;
+  }).join('') : `<li class="empty" style="grid-column:1/-1">NESSUN BLOCCO QUI.<br>Prova un altro mondo o un'altra fascia.</li>`;
+  $('#goal').style.display = list.length ? 'flex' : 'none';
+  hud();
+}
+function hud(){
+  const list = visibleGifts();
+  const w = state.cat==='all' ? 'TUTTI' : (CATS.findIndex(c=>c.id===state.cat)+1)+'-1 '+CATS.find(c=>c.id===state.cat).name.toUpperCase();
+  $('#hudN').textContent = String(list.length).padStart(2,'0');
+  $('#hudT').textContent = list.filter(g=>claims[g.id]).length+'/'+list.length;
+  $('#hudW').textContent = w;
+}
+
+/* ---------- scheda regalo ---------- */
+let openId = null;
+function openModal(id){
+  const g = GIFTS.find(x=>x.id===id); if(!g) return;
+  openId = id;
+  const c = claims[id], mine = !!c && isMine(id), other = !!c && !mine;
+  const cat = CATS.find(c=>c.id===g.cat);
+  $('#dlg').innerHTML = `
+    <h3 id="mTitle">${esc(g.title)}</h3>
+    <div class="pic">${picHtml(g)}</div>
+    <div class="meta">
+      <span>${PU[g.priority].e} ${PU[g.priority].n}</span>
+      <span class="price" style="font-size:9px"><i class="coin"></i>${g.price==null?'PREZZO N/D':'×'+eur(g.price)+' €'}</span>
+      ${cat?`<span>${cat.emoji} ${esc(cat.name)}</span>`:''}
+    </div>
+    ${g.note?`<p class="note">${esc(g.note)}</p>`:''}
+    ${c?`<div class="claimbox"><span>NOTA DI CHI L'HA PRESO</span><p>${c.note?esc(c.note):'Nessuna nota lasciata.'}</p></div>`:''}
+    <div class="btns">
+      ${!claims[id] ? `<button class="btn" data-act="claim">COLPISCI IL BLOCCO</button>` : ''}
+      ${mine ? `<button class="btn sec" data-act="unclaim">ANNULLA</button>` : ''}
+      ${other ? `<button class="btn" disabled>GIÀ PRESO</button>` : ''}
+      ${safeUrl(g.url)?`<a class="btn sec" href="${esc(g.url)}" target="_blank" rel="noopener">VEDI IL NEGOZIO</a>`:''}
+      <button class="btn sec" data-act="close">CHIUDI</button>
+    </div>
+    ${mine?'<p class="hint">L\'hai preso tu da questo dispositivo: solo da qui puoi annullare.</p>':''}`;
+  $('#modal').classList.add('on');
+  $('#dlg [data-act]').focus();
+}
+function closeModal(){ $('#modal').classList.remove('on'); openId=null; }
+
+function claimForm(id){
+  const g = GIFTS.find(x=>x.id===id);
+  $('#dlg').innerHTML = `
+    <h3 id="mTitle">${esc(g.title)}</h3>
+    <p class="note">Lascia una nota per chi aprirà questo blocco dopo di te: scrivi il tuo nome, così chi vuole fare lo stesso regalo può contattarti.</p>
+    <label class="fld">LA TUA NOTA<input id="noteIn" type="text" maxlength="200" autocomplete="off" placeholder="Es. Marco, scrivimi se vuoi fare a metà"></label>
+    <p class="hint" id="noteErr" role="alert"></p>
+    <div class="btns"><button class="btn" data-act="confirm">CONFERMA</button><button class="btn sec" data-act="back">INDIETRO</button></div>`;
+  $('#noteIn').focus();
+}
+function confirmClaim(){
+  const note = $('#noteIn').value.trim();
+  if(NOTE_REQUIRED && note.length<2){ $('#noteErr').textContent='Scrivi almeno il tuo nome.'; return; }
+  hitBlock(openId, note);
+}
+let busy = false;
+async function hitBlock(id, note){
+  if(busy) return; busy = true;
+  try{
+    const {data, error} = await sb.rpc('claim_gift', {p_gift_id:id, p_token:MY_TOKEN, p_note:note||null});
+    if(error) throw error;
+    if(!data){                       // qualcuno l'ha preso nel frattempo
+      await loadData(); renderGrid(); openModal(id); return;
+    }
+    mySet.add(id); saveMine();
+    await loadData(); closeModal(); renderGrid();
+    const el = document.querySelector(`.item[data-id="${id}"]`);
+    if(el){
+      el.parentElement.classList.add('bump');
+      const c = document.createElement('span'); c.className='pop'; c.textContent='🪙';
+      el.appendChild(c); setTimeout(()=>c.remove(),750);
+    }
+  }catch(e){
+    console.error(e);
+    const el = $('#noteErr'); if(el) el.textContent = 'Qualcosa è andato storto, riprova.';
+  }finally{ busy = false; }
+}
+async function release(id){
+  if(busy) return; busy = true;
+  try{
+    const {error} = await sb.rpc('unclaim_gift', {p_gift_id:id, p_token:MY_TOKEN});
+    if(error) throw error;
+    mySet.delete(id); saveMine();
+    await loadData(); closeModal(); renderGrid();
+  }catch(e){
+    console.error(e); alert('Non sono riuscito ad annullare, riprova.');
+  }finally{ busy = false; }
+}
+
+/* ---------- eventi (delegati: niente id inline negli onclick) ---------- */
+$('#worlds').addEventListener('click',e=>{
+  const b = e.target.closest('[data-cat]'); if(!b) return;
+  state.cat = b.dataset.cat; renderWorlds(); renderGrid();
+});
+$('#range').addEventListener('change',e=>{state.range=e.target.value;renderGrid();});
+$('#sort').addEventListener('change',e=>{state.sort=e.target.value;renderGrid();});
+$('#grid').addEventListener('click',e=>{
+  const b = e.target.closest('.item'); if(b) openModal(b.dataset.id);
+});
+$('#modal').addEventListener('click',e=>{
+  if(e.target.id==='modal') return closeModal();
+  const a = e.target.closest('[data-act]'); if(!a) return;
+  if(a.dataset.act==='close') closeModal();
+  if(a.dataset.act==='claim') claimForm(openId);
+  if(a.dataset.act==='back') openModal(openId);
+  if(a.dataset.act==='confirm') confirmClaim();
+  if(a.dataset.act==='unclaim') release(openId);
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape') closeModal();
+  if(e.key==='Enter' && e.target.id==='noteIn') confirmClaim();
+});
+
+/* ---------- schermata iniziale ---------- */
+function startGame(){ $('#boot').classList.add('off'); }
+$('#boot').addEventListener('click',startGame);
+$('#boot').addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' ') startGame(); });
+if(!SHOW_BOOT_SCREEN) startGame(); else $('#boot').focus();
+
+/* ---------- dati da Supabase ---------- */
+const pubUrl = p => sb.storage.from(BUCKET).getPublicUrl(p).data.publicUrl;
+const safeUrl = u => /^https?:\/\//i.test(u||'') ? u : '';
+const picHtml = g => g.imagePath ? `<img src="${esc(pubUrl(g.imagePath))}" alt="${esc(g.title)}">` : '🎁';
+
+async function loadData(){
+  const [c,g,cl] = await Promise.all([
+    sb.from('categories').select('id,name,emoji,sort_order').order('sort_order').order('name'),
+    sb.from('gifts').select('id,title,note,url,image_path,price,priority,category_id,created_at'),
+    sb.from('claims').select('gift_id,note')   // mai select('*'): il token non è leggibile
+  ]);
+  const err = c.error || g.error || cl.error; if(err) throw err;
+  CATS = c.data.map(x=>({id:x.id, name:x.name, emoji:x.emoji||''}));
+  GIFTS = g.data.map(x=>({id:x.id, title:x.title, note:x.note, url:x.url, imagePath:x.image_path,
+    price:x.price==null?null:Number(x.price), priority:x.priority, cat:x.category_id, created:x.created_at}));
+  claims = {}; cl.data.forEach(r=>{ claims[r.gift_id] = {note:r.note}; });
+  let changed = false;
+  mySet.forEach(id=>{ if(!claims[id]){ mySet.delete(id); changed = true; } });
+  if(changed) saveMine();
+}
+function showMsg(html){
+  $('#grid').innerHTML = `<li class="empty" style="grid-column:1/-1">${html}</li>`;
+  $('#goal').style.display = 'none';
+}
+async function init(){
+  renderWorlds();
+  if(!CONFIGURED){ showMsg('SUPABASE NON CONFIGURATO.<br>Inserisci URL e chiave in cima allo script.'); return; }
+  showMsg('CARICAMENTO...');
+  try{ await loadData(); renderWorlds(); renderGrid(); }
+  catch(e){ console.error(e); showMsg('IMPOSSIBILE CARICARE LA LISTA.<br>Riprova tra poco.'); }
+}
+init();
+</script>
+</body>
+</html>
